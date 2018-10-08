@@ -62,6 +62,7 @@ trait Conversion
 
     /**
      * 设置附加关联对象的属性
+     * mc https://www.kancloud.cn/manual/thinkphp5/138667
      * @access public
      * @param  string       $attr    关联属性
      * @param  string|array $append  追加属性名

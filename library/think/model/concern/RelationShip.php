@@ -332,6 +332,7 @@ trait RelationShip
 
     /**
      * HAS ONE 关联定义
+     * //mc https://www.kancloud.cn/manual/thinkphp5/142357
      * @access public
      * @param  string $model      模型名
      * @param  string $foreignKey 关联外键
@@ -350,6 +351,7 @@ trait RelationShip
 
     /**
      * BELONGS TO 关联定义
+     * //mc https://www.kancloud.cn/manual/thinkphp5/142357
      * @access public
      * @param  string $model      模型名
      * @param  string $foreignKey 关联外键

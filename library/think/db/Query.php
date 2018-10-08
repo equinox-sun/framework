@@ -169,7 +169,7 @@ class Query
             $name = Loader::parseName(substr($method, 5));
             array_unshift($args, $name);
             return call_user_func_array([$this, 'where'], $args);
-        } elseif ($this->model && method_exists($this->model, 'scope' . $method)) {
+        } elseif ($this->model && method_exists($this->model, 'scope' . $method)) {//mc 例子：https://www.kancloud.cn/manual/thinkphp5/138865
             // 动态调用命名范围
             $method = 'scope' . $method;
             array_unshift($args, $this);
@@ -2249,6 +2249,7 @@ class Query
 
     /**
      * 添加查询范围
+     * mc 例子：https://www.kancloud.cn/manual/thinkphp5/138865
      * @access public
      * @param  array|string|\Closure   $scope 查询范围定义
      * @param  array                   $args  参数
@@ -2257,7 +2258,7 @@ class Query
     public function scope($scope, ...$args)
     {
         // 查询范围的第一个参数始终是当前查询对象
-        array_unshift($args, $this);
+        array_unshift($args, $this);//mc 头插法，被传入单元是作为整体被插入的，所以传入单元讲保持同样的顺序
 
         if ($scope instanceof \Closure) {
             call_user_func_array($scope, $args);
