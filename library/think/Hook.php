@@ -83,7 +83,7 @@ class Hook
     public static function listen($tag, &$params = null, $extra = null, $once = false)
     {
         $results = [];
-        $tags    = static::get($tag);
+        $tags    = static::get($tag);//mc self 调用的静态方法或属性，始终表示其在使用的时候当前类（A）的方法或属性，可以替换为其类名，但是在类名很长或者有可能变化的情况下，使用self::方法无疑是更好的选择。 static 调用的静态方法或属性会在继承中被其子类重写覆盖，应该替换为对应的子类名（B）。
         foreach ($tags as $key => $name) {
             $results[$key] = self::exec($name, $tag, $params, $extra);
             if (false === $results[$key]) {

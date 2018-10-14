@@ -22,6 +22,12 @@ class Debug
     protected static $mem = [];
 
     /**
+     * //mc 笔记
+     * microtime - 返回当前 Unix 时间戳和微秒数，参数等价于TRUE时microtime()将返回一个浮点数
+     * memory_get_usage - 返回分配给 php 的内存量
+     * memory_get_peak_usage - 返回分配给 php 内存的峰值
+     */
+    /**
      * 记录时间（微秒）和内存使用情况
      * @param string    $name 标记位置
      * @param mixed     $value 标记值 留空则取当前 time 表示仅记录时间 否则同时记录时间和内存

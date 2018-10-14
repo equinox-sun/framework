@@ -533,7 +533,7 @@ class App
     public static function routeCheck($request, array $config)
     {
         $path   = $request->path();
-        $depr   = $config['pathinfo_depr'];
+        $depr   = $config['pathinfo_depr'];//mc pathinfo分隔符，默认为/
         $result = false;
         // 路由检测
         $check = !is_null(self::$routeCheck) ? self::$routeCheck : $config['url_route_on'];
@@ -559,8 +559,8 @@ class App
             }
 
             // 路由检测（根据路由定义返回不同的URL调度）
-            $result = Route::check($request, $path, $depr, $config['url_domain_deploy']);
-            $must   = !is_null(self::$routeMust) ? self::$routeMust : $config['url_route_must'];
+            $result = Route::check($request, $path, $depr, $config['url_domain_deploy']);//mc $config['url_domain_deploy'] 域名部署
+            $must   = !is_null(self::$routeMust) ? self::$routeMust : $config['url_route_must'];//mc 是否强制路由
             if ($must && false === $result) {
                 // 路由无效
                 throw new RouteNotFoundException();

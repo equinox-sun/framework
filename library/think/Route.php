@@ -9,6 +9,49 @@
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
 
+/**
+ * 笔记
+ * 1.$option键
+ *      complete_match ：是否完全匹配
+ *      method ：请求方式
+ *      ext ：伪静态后缀检测
+ *      deny_ext ：禁止的静态后缀
+ *      V5.0.7版本以上，ext 和 deny_ext 参数允许设置为空，分别表示不允许任何后缀以及必须使用后缀访问。
+ *      domain ：支持使用完整域名或者子域名进行检测
+ *      before_behavior、after_behavior ：前置行为（检测）（支持使用行为对路由进行检测是否匹配，如果行为方法返回false表示当前路由规则无效。eg：Route::get('user/:id','index/User/read',['before_behavior'=>'\app\index\behavior\UserCheck']);）、后置行为（执行）（可以为某个路由或者某个分组路由定义后置行为执行，表示当路由匹配成功后，执行的行为）
+ *      https ：是否https请求
+ *      callback ：自定义检测方法
+ *      merge_extra_vars ： 合并额外参数，通常用于完整匹配的情况，如果有额外的参数则合并作为变量值，例如： Route::get('new/:name$','News/read',['merge_extra_vars'=>true]);
+ http://serverName/new/thinkphp/hello会被匹配到，并且name变量的值为 thinkphp/hello
+ *      bind_model ：绑定模型（v5.0.1+）
+ *      cache ：请求缓存（v5.0.1+），值为缓存的秒数
+ *      param_depr ：路由参数分隔符（v5.0.2+）
+ *      ajax：Ajax检测（v5.0.2+）
+ *      pjax：Pjax检测（v5.0.2+)
+ *
+ *      name、var、prefix：不清楚用途
+ *      only/allow：表示允许的操作，eg:Route::resource('blog','index/blog',['only'=>['index','read','edit','update']]);不知道两个的区别
+ *            
+ *      except：表示排除的操作，eg:Route::resource('blog','index/blog',['except'=>['index','delete']]);
+ *      status：判断是否重定向时用到，301
+ *      
+ *      __url__ ： 如果要对整个URL进行规则检查，可以进行__url__ 变量规则，例如：
+ *      定义GET请求路由规则 并设置完整URL变量规则
+ *      Route::get('new/:id','News/read',[],['__url__'=>'new\/\w+$']);
+     
+ * 2.特殊路由规则/组合变量
+ *      如果你的路由规则比较特殊，可以在路由定义的时候使用组合变量。
+ *      eg:Route::get('item-<name>-<id>','product/detail',[],['name'=>'\w+','id'=>'\d+']);
+ *      组合变量的优势是路由规则中没有固定的分隔符，可以随意组合需要的变量规则，例如路由规则改成如下一样可以支持：
+ *      Route::get('item<name><id>','product/detail',[],['name'=>'[a-zA-Z]+','id'=>'\d+']);
+ *      Route::get('item@<name>-<id>','product/detail',[],['name'=>'\w+','id'=>'\d+']);
+ *      如果需要使用可选变量，则可以使用：
+ *      Route::get('item-<name><id?>','product/detail',[],['name'=>'[a-zA-Z]+','id'=>'\d+']);
+ *
+ * 3.App.php 文件中URL路由检测会调用rules、import、check、parseUrl四个函数
+ *
+ * 
+ */
 namespace think;
 
 use think\exception\HttpException;
@@ -90,6 +133,7 @@ class Route
      * @param array         $pattern 变量规则
      * @return void
      */
+    //mc todo
     public static function domain($domain, $rule = '', $option = [], $pattern = [])
     {
         if (is_array($domain)) {
@@ -141,11 +185,11 @@ class Route
     {
         if (is_array($name)) {
             return self::$rules['name'] = $name;
-        } elseif ('' === $name) {
+        } elseif ('' === $name) {//mc $name不传参或者为''则表示获取$rules['name']，返回一个数组
             return self::$rules['name'];
         } elseif (!is_null($value)) {
             self::$rules['name'][strtolower($name)][] = $value;
-        } else {
+        } else { //mc $value不传参或者为null则表示获取$rules['name']中键为$name的值
             $name = strtolower($name);
             return isset(self::$rules['name'][$name]) ? self::$rules['name'][$name] : null;
         }
@@ -163,6 +207,7 @@ class Route
     }
 
     /**
+     * //mc 入口之一
      * 导入配置文件的路由规则
      * @access public
      * @param array     $rule 路由规则
@@ -209,10 +254,10 @@ class Route
                 continue;
             }
             if (is_string($key) && 0 === strpos($key, '[')) {
-                $key = substr($key, 1, -1);
+                $key = substr($key, 1, -1);//mc 去掉[]
                 self::group($key, $val);
             } elseif (is_array($val)) {
-                self::setRule($key, $val[0], $type, $val[1], isset($val[2]) ? $val[2] : []);
+                self::setRule($key, $val[0], $type, $val[1], isset($val[2]) ? $val[2] : []);//todo method属于路由参数？
             } else {
                 self::setRule($key, $val, $type);
             }
@@ -231,7 +276,7 @@ class Route
      */
     public static function rule($rule, $route = '', $type = '*', $option = [], $pattern = [])
     {
-        $group = self::getGroup('name');
+        $group = self::getGroup('name');//todo
 
         if (!is_null($group)) {
             // 路由分组
@@ -247,7 +292,7 @@ class Route
         }
         if (is_array($rule) && empty($route)) {
             foreach ($rule as $key => $val) {
-                if (is_numeric($key)) {
+                if (is_numeric($key)) {//todo
                     $key = array_shift($val);
                 }
                 if (is_array($val)) {
@@ -257,7 +302,7 @@ class Route
                 } else {
                     $route = $val;
                 }
-                self::setRule($key, $route, $type, isset($option1) ? $option1 : $option, isset($pattern1) ? $pattern1 : $pattern, $group);
+                self::setRule($key, $route, $type, isset($option1) ? $option1 : $option, isset($pattern1) ? $pattern1 : $pattern, $group);//mc 如果在外面和规则里面同时传入了匹配参数和变量规则的话，路由规则定义里面的最终生效，对应的就是变量$option1、$pattern1，但请求类型参数以最外层决定，对应的是$type变量
             }
         } else {
             self::setRule($rule, $route, $type, $option, $pattern, $group);
@@ -266,6 +311,7 @@ class Route
     }
 
     /**
+     * 路由注册核心函数
      * 设置路由规则
      * @access public
      * @param string    $rule 路由规则
@@ -276,6 +322,15 @@ class Route
      * @param string    $group 所属分组
      * @return void
      */
+    /**
+     * //mc note
+     * $route 检测顺序：闭包-重定向-方法-控制-模块、控制器、操作
+     * 方式1：路由到模块/控制器/操作    '[模块/控制器/操作]?额外参数1=值1&额外参数2=值2...'
+     * 方式2：路由到重定向地址         ‘外部地址’ （默认301重定向） 或者['外部地址','重定向代码']
+     * 方式3：路由到控制器的方法        @[模块/控制器/]操作
+     * 方法4：路由到类的方法           '\完整的命名空间类::静态方法' 或者 '\完整的命名空间类@动态方法'
+     * 方法5：路由到闭包函数           闭包函数定义（支持参数传入）
+     */
     protected static function setRule($rule, $route, $type = '*', $option = [], $pattern = [], $group = '')
     {
         if (is_array($rule)) {
@@ -284,7 +339,7 @@ class Route
         } elseif (is_string($route)) {
             $name = $route;
         }
-        if (!isset($option['complete_match'])) {
+        if (!isset($option['complete_match'])) {//mc complete_match为true表示开启路由定义的全局匹配
             if (Config::get('route_complete_match')) {
                 $option['complete_match'] = true;
             } elseif ('$' == substr($rule, -1, 1)) {
@@ -297,7 +352,7 @@ class Route
         }
 
         if ('$' == substr($rule, -1, 1)) {
-            $rule = substr($rule, 0, -1);
+            $rule = substr($rule, 0, -1);//mc 去掉$
         }
 
         if ('/' != $rule || $group) {
@@ -312,7 +367,7 @@ class Route
         if (isset($option['modular'])) {
             $route = $option['modular'] . '/' . $route;
         }
-        if ($group) {
+        if ($group) {//todo
             if ('*' != $type) {
                 $option['method'] = $type;
             }
@@ -323,7 +378,7 @@ class Route
             }
         } else {
             if ('*' != $type && isset(self::$rules['*'][$rule])) {
-                unset(self::$rules['*'][$rule]);
+                unset(self::$rules['*'][$rule]);//todo 不知道用法
             }
             if (self::$domain) {
                 self::$rules['domain'][self::$domain][$type][$rule] = ['rule' => $rule, 'route' => $route, 'var' => $vars, 'option' => $option, 'pattern' => $pattern];
@@ -572,16 +627,38 @@ class Route
      * @param array     $pattern 变量规则
      * @return void
      */
+    /**
+     * //mc note    zilei 四期项目中的例子
+     * mbm/index/welcome'=>'mall_buyer_mobile/index.welcome' 则转为 $rule='mbm/index/welcome', $route='mall_buyer_mobile/index.welcome'，转为 
+     * self::rule('mbm/index/welcome$', 'mall_buyer_mobile/index.welcome/index', 'GET', [], []);
+     * self::rule('mbm/index/welcome/create$', 'mall_buyer_mobile/index.welcome/create', 'GET', [], []);
+     * self::rule('mbm/index/welcome/:id/edit$', 'mall_buyer_mobile/index.welcome/edit', 'GET', [], []);
+     * self::rule('mbm/index/welcome/:id$', 'mall_buyer_mobile/index.welcome/read', 'GET', [], []);
+     * self::rule('mbm/index/welcome$', 'mall_buyer_mobile/index.welcome/save', 'POST', [], []);
+     * self::rule('mbm/index/welcome/:id$', 'mall_buyer_mobile/index.welcome/update', 'PUT', [], []);
+     * self::rule('mbm/index/welcome/:id$', 'mall_buyer_mobile/index.welcome/delete', 'DELETE', [], []);
+     */
     public static function resource($rule, $route = '', $option = [], $pattern = [])
     {
         if (is_array($rule)) {
             foreach ($rule as $key => $val) {
                 if (is_array($val)) {
-                    list($val, $option, $pattern) = array_pad($val, 3, []);
+                    list($val, $option, $pattern) = array_pad($val, 3, []);//mc 以指定长度将一个值填充进数组，此处为在$val后填充 [] 到3个元素，即[$val,[],[]]
                 }
                 self::resource($key, $val, $option, $pattern);
             }
         } else {
+            /**
+             * //mc note    tp5文档上的例子
+             * Route::resource('blog.comment','index/comment');
+             * 就可以访问一下地址：
+             * http://serverName/blog/128/comment/32
+             * http://serverName/blog/128/comment/32/edit
+             * 生成的路由规则分别是
+             * blog/:blog_id/comment/:id
+             * blog/:blog_id/comment/:id/edit
+             * 对应方法：public function edit($id,$blog_id){}
+             */
             if (strpos($rule, '.')) {
                 // 注册嵌套资源路由
                 $array = explode('.', $rule);
@@ -598,10 +675,15 @@ class Route
                     || (isset($option['except']) && in_array($key, $option['except']))) {
                     continue;
                 }
+                /**
+                 * isset($last)表示$rule参数包含.
+                 * strpos($val[1], ':id') 表示遍历到edit/read/update/delete 其中一个
+                 * option还是有点不懂
+                 */
                 if (isset($last) && strpos($val[1], ':id') && isset($option['var'][$last])) {
-                    $val[1] = str_replace(':id', ':' . $option['var'][$last], $val[1]);
+                    $val[1] = str_replace(':id', ':' . $option['var'][$last], $val[1]);//mc 把id替换为$option['var'][$last]
                 } elseif (strpos($val[1], ':id') && isset($option['var'][$rule])) {
-                    $val[1] = str_replace(':id', ':' . $option['var'][$rule], $val[1]);
+                    $val[1] = str_replace(':id', ':' . $option['var'][$rule], $val[1]);///mc 把 id 替换为$option['var'][$rule]
                 }
                 $item           = ltrim($rule . $val[1], '/');
                 $option['rest'] = $key;
@@ -855,7 +937,7 @@ class Route
         if ('|' != $url) {
             $url = rtrim($url, '|');
         }
-        $item = str_replace('|', '/', $url);
+        $item = str_replace('|', '/', $url);//mc 又将分隔符切换为/，然后赋值给item
         if (isset($rules[$item])) {
             // 静态路由规则检测
             $rule = $rules[$item];
@@ -1377,17 +1459,17 @@ class Route
         $request = Request::instance();
         // 解析路由规则
         if ($rule) {
-            $rule = explode('/', $rule);
+            $rule = explode('/', $rule);//mc array explode ( string $delimiter , string $string [, int $limit ] ) 如果设置了 limit 参数并且是正数，则返回的数组包含最多 limit 个元素，而最后那个元素将包含 string 的剩余部分，即此处的合并额外变量
             // 获取URL地址中的参数
             $paths = explode('|', $pathinfo);
             foreach ($rule as $item) {
                 $fun = '';
                 if (0 === strpos($item, '[:')) {
-                    $item = substr($item, 1, -1);
+                    $item = substr($item, 1, -1);//mc 去掉[]
                 }
                 if (0 === strpos($item, ':')) {
-                    $var           = substr($item, 1);
-                    $matches[$var] = array_shift($paths);
+                    $var           = substr($item, 1);//mc 去掉:
+                    $matches[$var] = array_shift($paths);//mc 将 array 的第一个单元移出并作为结果返回，array_shift会将除额外参数外的都移出数组，变量的则放到$matches数组中，$var为键/变量名，$paths对应位置参数为值
                 } else {
                     // 过滤URL中的静态变量
                     array_shift($paths);
@@ -1405,14 +1487,14 @@ class Route
         // 替换路由地址中的变量
         if (is_string($route) && !empty($matches)) {
             foreach ($matches as $key => $val) {
-                if (false !== strpos($route, ':' . $key)) {
+                if (false !== strpos($route, ':' . $key)) {//mc //动态路由，eg：':action/blog/:id' => 'index/blog/:action' 此处有效的是前后对应的:action
                     $route = str_replace(':' . $key, $val, $route);
                 }
             }
         }
 
         // 绑定模型数据
-        if (isset($option['bind_model'])) {
+        if (isset($option['bind_model'])) {//todo
             $bind = [];
             foreach ($option['bind_model'] as $key => $val) {
                 if ($val instanceof \Closure) {
@@ -1492,6 +1574,7 @@ class Route
             $result           = ['type' => 'method', 'method' => $method, 'var' => $var];
         } elseif (0 === strpos($route, '@')) {
             // 路由到控制器
+            //mc 直接执行某个控制器类的方法，而不需要去解析 模块/控制器/操作这些，同时也不会去初始化模块。相当于直接执行Loader::action($result);
             $route             = substr($route, 1);
             list($route, $var) = self::parseUrlPath($route);
             $result            = ['type' => 'controller', 'controller' => implode('/', $route), 'var' => $var];
@@ -1550,7 +1633,7 @@ class Route
     private static function parseUrlParams($url, &$var = [])
     {
         if ($url) {
-            if (Config::get('url_param_type')) {
+            if (Config::get('url_param_type')) {//mc URL参数方式 0 按名称成对解析 1 按顺序解析
                 $var += explode('|', $url);
             } else {
                 preg_replace_callback('/(\w+)\|([^\|]+)/', function ($match) use (&$var) {
@@ -1569,10 +1652,17 @@ class Route
         $var = [];
         foreach (explode('/', $rule) as $val) {
             $optional = false;
+            /**
+             * //mc note
+             * 组合变量的优势是，路由规则中没有固定的分隔符，可以随意组合需要的变量规则，此时用到 <(\w+(\??))> 
+             * int preg_match_all ( string $pattern , string $subject [, array &$matches [, int $flags = PREG_PATTERN_ORDER [, int $offset = 0 ]]] )
+             * matches 为二维数组
+             * 此处 $flags 为默认的 PREG_PATTERN_ORDER ，即匹配结果 $matches[0] 为包含标签的匹配项，$matches[1] 为第一个匹配项 (\w+(\??)) ，即标签内容，$matches[2] 为第二个匹配项(\??)，对应每个匹配项后是否有问号
+             */
             if (false !== strpos($val, '<') && preg_match_all('/<(\w+(\??))>/', $val, $matches)) {
                 foreach ($matches[1] as $name) {
-                    if (strpos($name, '?')) {
-                        $name     = substr($name, 0, -1);
+                    if (strpos($name, '?')) {//mc 表示可选变量
+                        $name     = substr($name, 0, -1);//mc 去掉问号
                         $optional = true;
                     } else {
                         $optional = false;
@@ -1584,11 +1674,11 @@ class Route
             if (0 === strpos($val, '[:')) {
                 // 可选参数
                 $optional = true;
-                $val      = substr($val, 1, -1);
+                $val      = substr($val, 1, -1);//mc 去掉[]
             }
             if (0 === strpos($val, ':')) {
                 // URL变量
-                $name       = substr($val, 1);
+                $name       = substr($val, 1);//mc 去掉:
                 $var[$name] = $optional ? 2 : 1;
             }
         }
